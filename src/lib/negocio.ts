@@ -1,7 +1,7 @@
 /**
  * Datos del negocio. Todo lo que dice "CONFIRMAR" debe revisarlo la dueña antes de publicar.
  */
-export const sitioUrl = (process.env.NEXT_PUBLIC_SITIO_URL?.trim() || "https://cosavela.vercel.app").replace(/\/$/, "");
+export const sitioUrl = (process.env.NEXT_PUBLIC_SITIO_URL?.trim() || "https://cosa-vela.vercel.app").replace(/\/$/, "");
 
 export const negocio = {
   nombre: "CosaVela",
