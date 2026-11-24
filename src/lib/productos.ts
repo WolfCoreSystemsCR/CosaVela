@@ -277,5 +277,38 @@ export const tamanosCaja = [
 
 export type TamanoCaja = (typeof tamanosCaja)[number]["id"];
 
+export const MAX_DEDICATORIA = 280;
+
+/** Caja armada por el cliente. Solo se guardan referencias al catálogo: precio y nombres se recalculan siempre. */
+export type CajaArmada = { tamano: TamanoCaja; items: string[]; dedicatoria?: string };
+
+export type CajaCalculada = { nombre: string; precio: number; contenido: string[]; caja: CajaArmada };
+
+/**
+ * Valida una caja contra el catálogo actual y calcula su precio.
+ * Devuelve null si el tamaño no existe, algún artículo no es armable, se excede el espacio o no lleva vela.
+ */
+export function calcularCaja(entrada: { tamano: unknown; items: unknown; dedicatoria?: unknown }): CajaCalculada | null {
+  const tamano = tamanosCaja.find((t) => t.id === entrada.tamano);
+  if (!tamano || !Array.isArray(entrada.items)) return null;
+  if (entrada.items.length === 0 || entrada.items.length > tamano.espacios) return null;
+  const items: Producto[] = [];
+  for (const slug of entrada.items) {
+    const p = typeof slug === "string" ? buscarProducto(slug) : undefined;
+    if (!p || !p.armable) return null;
+    items.push(p);
+  }
+  if (!items.some((p) => p.categoria === "velas")) return null;
+  const dedicatoria = typeof entrada.dedicatoria === "string" ? entrada.dedicatoria.trim().slice(0, MAX_DEDICATORIA) : "";
+  const contenido = items.map((p) => p.nombre);
+  if (dedicatoria) contenido.push(`Dedicatoria: “${dedicatoria}”`);
+  return {
+    nombre: `Caja personalizada ${tamano.nombre.toLowerCase()}`,
+    precio: tamano.base + items.reduce((s, p) => s + p.precio, 0),
+    contenido,
+    caja: { tamano: tamano.id, items: items.map((p) => p.slug), ...(dedicatoria ? { dedicatoria } : {}) },
+  };
+}
+
 const formato = new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 });
 export const colones = (n: number) => formato.format(n);

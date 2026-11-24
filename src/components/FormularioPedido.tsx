@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { fechaLocalHoy } from "@/lib/fechas";
 import { enlaceWhatsApp, metodosEntrega, metodosPago, negocio, provincias } from "@/lib/negocio";
 import { colones } from "@/lib/productos";
 import { ListaLineas, useCarrito } from "./Carrito";
@@ -19,11 +20,12 @@ export function FormularioPedido() {
   const { lineas, subtotal, listo, vaciar } = useCarrito();
   const [entrega, setEntrega] = useState<(typeof metodosEntrega)[number]["id"]>("gam");
   const [errores, setErrores] = useState<Errores>({});
-  const [enviado, setEnviado] = useState(false);
+  /** Enlace de WhatsApp del pedido enviado. Se conserva por si el navegador bloqueó la ventana. */
+  const [enlaceEnviado, setEnlaceEnviado] = useState<string | null>(null);
 
   if (!listo) return <div className="h-96 animate-pulse rounded-[2rem] bg-papel" />;
 
-  if (enviado) {
+  if (enlaceEnviado) {
     return (
       <div role="status" className="mx-auto max-w-xl rounded-[2rem] border border-linea bg-papel p-10 text-center">
         <div className="mx-auto grid size-16 place-items-center rounded-full bg-oliva text-papel">
@@ -33,9 +35,14 @@ export function FormularioPedido() {
         <p className="mt-3 text-cacao-suave">
           Se abrió WhatsApp con el detalle. Envíe el mensaje y le confirmamos el total con envío y los datos para el pago.
         </p>
-        <Link href="/tienda" className="boton mt-8">
-          Seguir comprando
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <a href={enlaceEnviado} target="_blank" rel="noopener noreferrer" className="boton-claro">
+            <Icono nombre="whatsapp" className="size-5" /> ¿No se abrió WhatsApp? Abrir de nuevo
+          </a>
+          <Link href="/tienda" className="boton">
+            Seguir comprando
+          </Link>
+        </div>
       </div>
     );
   }
@@ -100,9 +107,10 @@ export function FormularioPedido() {
       .filter((l) => l !== null)
       .join("\n");
 
-    window.open(enlaceWhatsApp(mensaje), "_blank", "noopener,noreferrer");
+    const enlace = enlaceWhatsApp(mensaje);
+    window.open(enlace, "_blank", "noopener,noreferrer");
     vaciar();
-    setEnviado(true);
+    setEnlaceEnviado(enlace);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -171,7 +179,7 @@ export function FormularioPedido() {
             <label htmlFor="fecha" className="etiqueta-campo">
               Fecha deseada <span className="font-normal text-cacao-suave">(opcional)</span>
             </label>
-            <input id="fecha" name="fecha" type="date" className="campo" />
+            <input id="fecha" name="fecha" type="date" min={fechaLocalHoy()} className="campo" />
           </div>
         </fieldset>
 
