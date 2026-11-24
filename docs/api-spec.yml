@@ -1,0 +1,92 @@
+openapi: 3.1.0
+info:
+  title: CosaVela API
+  version: 0.1.0
+  description: |
+    The site has a single API route. Everything else is static or server-rendered pages.
+    Implementation: src/app/api/cotizacion/route.ts
+servers:
+  - url: https://cosa-vela.vercel.app
+  - url: http://localhost:3000
+paths:
+  /api/cotizacion:
+    post:
+      summary: Send a company gift quote request
+      description: |
+        Validates the request and emails it to COTIZACION_PARA through Resend.
+        Requirements checked in order: same-origin `Origin` header, JSON content type, body ≤ 8 KB,
+        at most 5 requests per IP per 10 minutes (per server instance), valid JSON object.
+        Bot submissions (filled `sitio_web` or `tiempo` < 3000 ms) get a fake 200 and are not sent.
+        If email is not configured or Resend fails, the response carries `sinCorreo: true`
+        and the client offers to send the quote through WhatsApp instead.
+      operationId: crearCotizacion
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string }
+          description: Must match the request host or NEXT_PUBLIC_SITIO_URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SolicitudCotizacion" }
+      responses:
+        "200":
+          description: Quote sent (or bot submission silently accepted).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { ok: { type: boolean, const: true } }
+        "400":
+          description: Malformed JSON or invalid fields.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "403":
+          description: Origin not allowed.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "413":
+          description: Body larger than 8 KB.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "415":
+          description: Content-Type is not application/json.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "429":
+          description: Too many requests from this IP.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "502":
+          description: Resend failed. Client falls back to WhatsApp.
+          content: { application/json: { schema: { $ref: "#/components/schemas/ErrorSinCorreo" } } }
+        "503":
+          description: Email not configured (RESEND_API_KEY, COTIZACION_PARA or COTIZACION_DESDE missing).
+          content: { application/json: { schema: { $ref: "#/components/schemas/ErrorSinCorreo" } } }
+components:
+  schemas:
+    SolicitudCotizacion:
+      type: object
+      required: [empresa, nombre, correo, cantidad, presupuesto, ocasion]
+      properties:
+        empresa: { type: string, minLength: 2, maxLength: 120 }
+        nombre: { type: string, minLength: 2, maxLength: 100 }
+        correo: { type: string, format: email, maxLength: 150 }
+        telefono: { type: string, maxLength: 20 }
+        cantidad: { type: string, enum: ["10 a 25", "26 a 50", "51 a 100", "Más de 100"] }
+        presupuesto:
+          type: string
+          enum: ["Menos de ₡15 000", "₡15 000 a ₡25 000", "₡25 000 a ₡40 000", "Más de ₡40 000"]
+        ocasion:
+          type: string
+          enum: ["Fin de año", "Clientes", "Bienvenida de colaboradores", "Evento o activación", "Aniversario de la empresa", "Otra"]
+        fecha: { type: string, format: date, description: "YYYY-MM-DD; ignored if malformed" }
+        mensaje: { type: string, maxLength: 2000 }
+        sitio_web: { type: string, description: "Honeypot. Must be empty." }
+        tiempo: { type: number, description: "Milliseconds the form was open. Must be ≥ 3000." }
+    Error:
+      type: object
+      properties:
+        mensaje: { type: string, description: "Spanish message safe to show to the customer" }
+    ErrorSinCorreo:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties: { sinCorreo: { type: boolean, const: true } }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ocasionesEmpresa, rangosCantidad, rangosPresupuesto, textoCotizacion, type Cotizacion } from "@/lib/cotizacion";
 import { enlaceWhatsApp } from "@/lib/negocio";
+import { fechaLocalHoy } from "@/lib/fechas";
 import { Icono } from "./Icono";
 
 type Estado = { tipo: "inicial" } | { tipo: "enviando" } | { tipo: "ok" } | { tipo: "whatsapp"; enlace: string } | { tipo: "error"; mensaje: string };
@@ -12,10 +13,13 @@ export function FormularioEmpresa() {
   const [estado, setEstado] = useState<Estado>({ tipo: "inicial" });
   const [errores, setErrores] = useState<Partial<Record<Campo, string>>>({});
   const inicio = useRef(0);
+  // Se calcula en el navegador para no generar diferencias de hidratación con el servidor.
+  const [hoy, setHoy] = useState<string | undefined>(undefined);
   const resultado = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     inicio.current = Date.now();
+    setHoy(fechaLocalHoy());
   }, []);
   useEffect(() => {
     if (estado.tipo === "ok" || estado.tipo === "whatsapp") resultado.current?.focus();
@@ -137,7 +141,7 @@ export function FormularioEmpresa() {
         </div>
         <div>
           <label htmlFor="fecha-e" className="etiqueta-campo">Fecha de entrega <span className="font-normal text-cacao-suave">(aprox.)</span></label>
-          <input id="fecha-e" name="fecha" type="date" className="campo" />
+          <input id="fecha-e" name="fecha" type="date" min={hoy} className="campo" />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="mensaje" className="etiqueta-campo">Detalles <span className="font-normal text-cacao-suave">(opcional)</span></label>

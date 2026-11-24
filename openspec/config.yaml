@@ -1,0 +1,59 @@
+schema: spec-driven
+
+context: |
+  Project: CosaVela, online store for a Costa Rican artisan candle and gift-box business.
+  Stack: Next.js 16 App Router, React 19, Tailwind CSS 4, TypeScript strict, Vitest. Deployed on Vercel. No database.
+  Single source of truth for rules: docs/base-standards.md (also exposed as CLAUDE.md, AGENTS.md, GEMINI.md, codex.md).
+  Read before designing or implementing:
+    - docs/backend-standards.md (route handlers in src/app/api, logic in src/lib, security, tests)
+    - docs/frontend-standards.md (App Router pages, components, cart, forms, a11y, SEO)
+    - docs/documentation-standards.md
+    - docs/development_guide.md
+    - docs/api-spec.yml
+    - docs/data-model.md
+    - docs/openspec-tasks-mandatory-steps.md
+  Agents: ai-specs/agents/backend-developer.md for server/logic work, ai-specs/agents/frontend-developer.md for UI work.
+  Workflow guidance: ai-specs/skills/.
+  Language: user-facing copy and code identifiers/comments in Spanish (es-CR, "usted"), matching existing code.
+  OpenSpec artifacts, docs, tests names, commits and PRs in English.
+  Prices are CRC integers and must always be recomputable from src/lib/productos.ts; never trust client prices.
+
+rules:
+  tasks:
+    - "Step 0 is always: create branch feature/<change-name> (or fix/<change-name>) from main."
+    - "Write failing Vitest tests before implementing logic in src/lib or src/app/api."
+    - "There is no database: database state verification steps from openspec-tasks-mandatory-steps.md are N/A; say so in the report."
+    - "Run npm test, npm run typecheck and npm run build before marking implementation complete."
+    - "Manual curl check is mandatory only when src/app/api changes."
+    - "Update docs/api-spec.yml, docs/data-model.md and docs/*-standards.md when affected."
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { colones, productos, tamanosCaja, type TamanoCaja } from "@/lib/productos";
+import { colones, MAX_DEDICATORIA, productos, tamanosCaja, type TamanoCaja } from "@/lib/productos";
 import { useCarrito } from "./Carrito";
 import { Icono } from "./Icono";
 import { CajaSVG, ImagenProducto } from "./Ilustracion";
@@ -9,10 +9,9 @@ import { CajaSVG, ImagenProducto } from "./Ilustracion";
 const armables = productos.filter((p) => p.armable);
 const velas = armables.filter((p) => p.categoria === "velas");
 const complementos = armables.filter((p) => p.categoria === "complementos");
-const MAX_DEDICATORIA = 280;
 
 export function ArmaCaja() {
-  const { agregarLinea } = useCarrito();
+  const { agregarCaja } = useCarrito();
   const [tamano, setTamano] = useState<TamanoCaja>("mediana");
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [dedicatoria, setDedicatoria] = useState("");
@@ -46,10 +45,10 @@ export function ArmaCaja() {
       setAviso("Agregue al menos una vela a su caja.");
       return;
     }
-    const contenido = items.map((p) => p.nombre);
-    const texto = dedicatoria.trim();
-    if (texto) contenido.push(`Dedicatoria: “${texto}”`);
-    agregarLinea({ nombre: `Caja personalizada ${caja.nombre.toLowerCase()}`, precio: total, contenido });
+    if (!agregarCaja({ tamano, items: elegidos, dedicatoria })) {
+      setAviso("No pudimos agregar la caja. Revise los artículos elegidos.");
+      return;
+    }
     setElegidos([]);
     setDedicatoria("");
   }

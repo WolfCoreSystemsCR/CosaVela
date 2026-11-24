@@ -13,7 +13,7 @@ npm run dev                  # http://localhost:3000
 
 ## Publicar en Vercel
 
-Nuevo proyecto desde este repositorio con **Root Directory = `cosavela`**. Variables en `.env.example`.
+Nuevo proyecto desde este repositorio. **Root Directory**: la raíz del repositorio (dejar vacío), porque `package.json` está en la raíz. Variables en `.env.example`.
 
 ## Qué editar antes de publicar
 
@@ -30,3 +30,12 @@ Nuevo proyecto desde este repositorio con **Root Directory = `cosavela`**. Varia
 3. Se abre WhatsApp con el pedido completo; el negocio confirma el envío y el total.
 
 Cotizaciones de empresas: `/api/cotizacion` envía correo con Resend si está configurado; si no, ofrece enviarla por WhatsApp.
+
+## Desarrollo
+
+```bash
+npm test             # pruebas unitarias (Vitest)
+npm run typecheck    # tipos de rutas + TypeScript
+```
+
+Reglas técnicas, estándares y flujo de trabajo con agentes de IA (OpenSpec + Specboot): ver `docs/` y `CLAUDE.md`.

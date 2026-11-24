@@ -2,18 +2,11 @@
 
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { buscarProducto, colones } from "@/lib/productos";
-import { Icono } from "./Icono";
+import { MAX_CANTIDAD, sanear, type LineaCarrito } from "@/lib/carrito";
+import { buscarProducto, calcularCaja, colones, type CajaArmada } from "@/lib/productos";
 
-export type LineaCarrito = {
-  id: string;
-  nombre: string;
-  precio: number;
-  cantidad: number;
-  slug?: string;
-  /** Contenido de una caja armada por el cliente. */
-  contenido?: string[];
-};
+export type { LineaCarrito };
+import { Icono } from "./Icono";
 
 type ContextoCarrito = {
   lineas: LineaCarrito[];
@@ -24,7 +17,8 @@ type ContextoCarrito = {
   abrir: () => void;
   cerrar: () => void;
   agregarProducto: (slug: string, cantidad?: number) => void;
-  agregarLinea: (linea: Omit<LineaCarrito, "id" | "cantidad">) => void;
+  /** Agrega una caja armada. Devuelve false si la caja no es válida para el catálogo actual. */
+  agregarCaja: (caja: CajaArmada) => boolean;
   cambiarCantidad: (id: string, cantidad: number) => void;
   quitar: (id: string) => void;
   vaciar: () => void;
@@ -32,31 +26,6 @@ type ContextoCarrito = {
 
 const Contexto = createContext<ContextoCarrito | null>(null);
 const CLAVE = "cosavela-carrito-v1";
-const MAX_CANTIDAD = 99;
-
-/** Precios y nombres de productos del catálogo siempre se toman del catálogo actual, no del navegador. */
-function sanear(datos: unknown): LineaCarrito[] {
-  if (!Array.isArray(datos)) return [];
-  const lineas: LineaCarrito[] = [];
-  for (const d of datos.slice(0, 50)) {
-    if (!d || typeof d !== "object") continue;
-    const l = d as Partial<LineaCarrito>;
-    const cantidad = Math.min(MAX_CANTIDAD, Math.max(1, Math.floor(Number(l.cantidad) || 1)));
-    if (typeof l.slug === "string") {
-      const p = buscarProducto(l.slug);
-      if (p) lineas.push({ id: p.slug, slug: p.slug, nombre: p.nombre, precio: p.precio, cantidad });
-    } else if (typeof l.id === "string" && typeof l.nombre === "string" && Number.isFinite(l.precio) && Array.isArray(l.contenido)) {
-      lineas.push({
-        id: l.id.slice(0, 60),
-        nombre: l.nombre.slice(0, 80),
-        precio: Math.max(0, Number(l.precio)),
-        cantidad,
-        contenido: l.contenido.filter((c): c is string => typeof c === "string").slice(0, 10),
-      });
-    }
-  }
-  return lineas;
-}
 
 export function ProveedorCarrito({ children }: { children: React.ReactNode }) {
   const [lineas, setLineas] = useState<LineaCarrito[]>([]);
@@ -94,10 +63,13 @@ export function ProveedorCarrito({ children }: { children: React.ReactNode }) {
     setAbierto(true);
   }, []);
 
-  const agregarLinea = useCallback((linea: Omit<LineaCarrito, "id" | "cantidad">) => {
-    const id = `caja-${Date.now().toString(36)}`;
-    setLineas((prev) => [...prev, { ...linea, id, cantidad: 1 }]);
+  const agregarCaja = useCallback((caja: CajaArmada) => {
+    const c = calcularCaja(caja);
+    if (!c) return false;
+    const id = `caja-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    setLineas((prev) => [...prev, { id, nombre: c.nombre, precio: c.precio, cantidad: 1, contenido: c.contenido, caja: c.caja }]);
     setAbierto(true);
+    return true;
   }, []);
 
   const cambiarCantidad = useCallback((id: string, cantidad: number) => {
@@ -121,12 +93,12 @@ export function ProveedorCarrito({ children }: { children: React.ReactNode }) {
       abrir,
       cerrar,
       agregarProducto,
-      agregarLinea,
+      agregarCaja,
       cambiarCantidad,
       quitar,
       vaciar,
     }),
-    [lineas, abierto, listo, abrir, cerrar, agregarProducto, agregarLinea, cambiarCantidad, quitar, vaciar],
+    [lineas, abierto, listo, abrir, cerrar, agregarProducto, agregarCaja, cambiarCantidad, quitar, vaciar],
   );
 
   return (
