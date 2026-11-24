@@ -54,13 +54,13 @@ For detailed standards and guidelines specific to different areas of the project
 
 Planning workflows (`enrich-us`, `openspec-propose`, `openspec-ff-change`, `openspec-continue-change`) should run with the most capable Opus model available and high reasoning. If the session runs a smaller model, say so before planning. Do not edit `.claude/settings.json` to change the model without the user's approval.
 
-## 6. Symlink Integrity and Multi-Agent Portability
+## 6. Agent folders and Windows (real files, no symlinks)
 
-- **Canonical Source**: Keep reusable artifacts in `ai-specs` as the canonical source. Agent-specific paths (such as `.claude` and `.cursor`) should reference them through symlinks when possible.
-- **Update Safety**: Whenever a file is renamed, moved, or its suffix changes, verify and update all symlinks that target it before considering the change complete.
-- **New Artifact Linking**: Whenever creating a new artifact that requires multi-agent exposure (for example new agents or skills in `ai-specs`), create the corresponding symlinks from the expected agent-specific reference paths.
-- **External Customization Review**: Whenever customization is introduced outside `ai-specs`, evaluate whether it should be moved into `ai-specs` and replaced with symlinks from the original locations.
-- **Completion Gate**: A change is incomplete if it leaves broken symlinks, stale targets, or duplicated canonical artifacts across agent-specific folders.
+The repository is used on Windows, where Git defaults to `core.symlinks=false` and checks symlinks out as plain text files. Therefore agent entry points and folders are **real files**:
+
+- `CLAUDE.md`, `GEMINI.md` and `codex.md` contain `@docs/base-standards.md` (an import Claude Code resolves) plus a short note. `AGENTS.md` is a real file that points here.
+- `.claude/skills/`, `.claude/agents/`, `.cursor/skills/` and `.cursor/agents/` are **copies** of `ai-specs/skills/`, `ai-specs/agents/` and the OpenSpec skills in `.agents/skills/`.
+- `ai-specs/` stays the canonical source. When a skill or agent changes there, copy it again into every agent folder in the same change. A change that leaves copies out of sync is incomplete.
 
 ## 7. Mandatory OpenSpec Artifact Updates for Post-Apply Changes
 
