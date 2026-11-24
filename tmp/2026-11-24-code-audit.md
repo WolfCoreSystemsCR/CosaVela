@@ -15,9 +15,9 @@ Four real defects were found and fixed. Two known limitations are documented, no
 | Check | Before | After |
 | --- | --- | --- |
 | `npm run typecheck` | **Fails** on a clean checkout (`PageProps` not found) | Passes |
-| Unit tests | None (no test runner) | 20 tests, Vitest, all passing |
+| Unit tests | None (no test runner) | 20 tests, Vitest 5, all passing |
 | `next build` | Passes on Vercel (fonts blocked in the audit sandbox; verified with fonts stubbed) | Passes |
-| `npm audit --omit=dev` | 0 vulnerabilities | 0 vulnerabilities |
+| `npm audit` (incl. dev) | 0 vulnerabilities | 0 vulnerabilities (Vitest 5; Vitest 3 had advisories for tinypool and @vitest/mocker) |
 
 ## Findings
 
